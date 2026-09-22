@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venv/bin/python tests/run.py:*)",
+      "Bash(.venv/bin/python tests/test_guard.py)",
+      "Bash(.venv/bin/python tests/test_rag.py:*)",
+      "Bash(.venv/bin/python build_kb.py)",
+      "Bash(.venv/bin/python -c:*)",
+      "Bash(curl -s localhost:8000/health)",
+      "Bash(curl -s localhost:8000/config)",
+      "Bash(grep:*)",
+      "Bash(ls:*)"
+    ]
+  }
+}

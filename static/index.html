@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tesla Qo'llab-quvvatlash — AI Call Center</title>
+<style>
+  :root {
+    --bg: #0b0b0d;
+    --panel: #151518;
+    --text: #f4f4f5;
+    --muted: #8b8b92;
+    --accent: #e31937;
+    --border: #262629;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+  }
+  header { text-align: center; }
+  .wordmark {
+    font-size: .95rem;
+    letter-spacing: .55em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin: 0 0 .75rem;
+  }
+  h1 { font-size: 1.5rem; font-weight: 500; margin: 0; }
+  header p { color: var(--muted); margin: .5rem 0 0; font-size: .9rem; }
+
+  .orb {
+    width: 150px; height: 150px; border-radius: 50%;
+    border: 1px solid var(--border);
+    background: radial-gradient(circle at 50% 45%, #1e1e23, #111114);
+    display: grid; place-items: center;
+    transition: box-shadow .25s ease, border-color .25s ease;
+  }
+  .orb::after {
+    content: ''; width: 54px; height: 54px; border-radius: 50%;
+    background: #3a3a42; transition: transform .25s ease, background .25s ease;
+  }
+  .orb.connecting { border-color: #55555f; }
+  .orb.connecting::after { background: #6a6a76; animation: pulse 1.1s ease-in-out infinite; }
+  .orb.listening { border-color: #2f6f4f; box-shadow: 0 0 44px rgba(52,168,110,.22); }
+  .orb.listening::after { background: #34a86e; animation: pulse 2.4s ease-in-out infinite; }
+  .orb.speaking { border-color: var(--accent); box-shadow: 0 0 56px rgba(227,25,55,.3); }
+  .orb.speaking::after { background: var(--accent); animation: pulse .75s ease-in-out infinite; }
+  .orb.error { border-color: #7a3030; }
+  .orb.error::after { background: #b34747; }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.35); }
+  }
+
+  #status { color: var(--muted); font-size: .95rem; min-height: 1.4em; margin: 0; }
+
+  button {
+    padding: .9rem 2.6rem;
+    font-size: .95rem;
+    font-weight: 500;
+    letter-spacing: .04em;
+    color: var(--text);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease;
+  }
+  button:hover:not(:disabled) { background: #1e1e23; border-color: #3a3a42; }
+  button.active { background: var(--accent); border-color: var(--accent); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+
+  footer {
+    position: fixed; bottom: 1.25rem;
+    color: #55555f; font-size: .72rem; text-align: center; padding: 0 1rem;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <p class="wordmark">Tesla</p>
+    <h1>Mijozlarni qo'llab-quvvatlash</h1>
+    <p>Ovozli yordamchi &middot; hozir mavjud</p>
+  </header>
+
+  <div id="orb" class="orb"></div>
+  <p id="status">Tugmani bosing va gapiring</p>
+  <button id="call-button">Qo'ng'iroq qilish</button>
+
+  <footer>
+    Demo MVP. Not affiliated with Tesla, Inc. Knowledge base compiled from public
+    sources for demonstration only.
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
