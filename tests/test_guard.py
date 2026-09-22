@@ -29,6 +29,7 @@ ON_TOPIC = [
     "assalomu alaykum",
     "rahmat, juda yaxshi",
     "meni eshitayapsizmi",
+    "Model X sport rejimi qanday ishlaydi",  # Sport mode is a real drive mode
 ]
 
 OFF_TOPIC = [
@@ -114,6 +115,33 @@ def test_word_boundaries() -> int:
     return 2
 
 
+def test_uzbek_stem_boundaries() -> int:
+    """Regression: short Uzbek stems + an open suffix tail swallowed other words.
+
+    Same failure as test_word_boundaries ('war' inside 'warranty'), Uzbek side.
+    Only real inflections may extend a stem -- see _SUFFIX_TAIL in guard.py.
+    """
+    for text in [
+        "oshxona uchun rozetka",             # osh (pilaf) vs oshxona (kitchen)
+        "dinamik quvvatlash",                # din (religion) vs dinamik
+        "dorixona yonida zaryadlash bormi",  # dori (medicine) vs dorixona
+        "Supercharger sudralib turadi",      # sud (court) vs sudralib
+    ]:
+        ok, reason = is_on_topic(text)
+        assert ok, f"stem over-match rejected valid question: {text!r} ({reason})"
+
+    # Real inflections must still be caught.
+    for text in [
+        "osh retseptini ayting",
+        "din haqida gapiring",
+        "sud jarayoni haqida",
+        "aksiyalarini sotib olsam",
+    ]:
+        ok, _ = is_on_topic(text)
+        assert not ok, f"inflected off-topic term leaked through: {text!r}"
+    return 8
+
+
 def test_uzbek_apostrophe_variants() -> int:
     """Transcription may emit ' or ' or ʻ for the same Uzbek word."""
     variants = [
@@ -149,6 +177,7 @@ TESTS = [
     test_injection_rejected,
     test_off_topic_beats_on_topic,
     test_word_boundaries,
+    test_uzbek_stem_boundaries,
     test_uzbek_apostrophe_variants,
     test_empty_input,
 ]
