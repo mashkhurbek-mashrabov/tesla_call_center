@@ -16,6 +16,13 @@ LIVE_MODEL = os.getenv("LIVE_MODEL", "gemini-3.8-live")
 EMBED_MODEL = os.getenv("EMBED_MODEL", "gemini-embedding-2")
 EMBED_DIM = 768
 
+# Prebuilt Live API voices. Language-agnostic, so Uzbek prosody varies between them --
+# the UI exposes the list so a voice can be picked by ear instead of by guess.
+# ponytail: a flat tuple, not a registry. Allow-list membership IS the validation, and
+# an unknown name from the client falls back to VOICE_NAME rather than reaching Google.
+VOICES = ("Kore", "Puck", "Charon", "Fenrir", "Aoede", "Leda", "Orus", "Zephyr")
+VOICE_NAME = os.getenv("VOICE_NAME", "Kore")
+
 # Live API audio formats are fixed by the model, not by us.
 INPUT_SAMPLE_RATE = 16000
 OUTPUT_SAMPLE_RATE = 24000
