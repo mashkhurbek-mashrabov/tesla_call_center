@@ -178,6 +178,10 @@ async def gemini_to_browser(ws: WebSocket, session) -> None:
             if content.turn_complete:
                 if caller_turn:
                     said = "".join(caller_turn).strip()
+                    # ponytail: observability only -- run_tool() is the enforcing
+                    # layer. By turn_complete the model has already spoken, so
+                    # rejecting here would be theater. This log is how the word
+                    # lists get tuned against real calls.
                     allowed, reason = guard.is_on_topic(said)
                     log.info("CALLER: %s  [guard: %s]", said, reason)
                     if not allowed:

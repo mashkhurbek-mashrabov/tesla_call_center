@@ -76,7 +76,8 @@ OFF_TOPIC = {
     "kod yoz", "dastur yoz", "skript", "kod yozib", "python kodi",
     "retsept", "ovqat", "pishir", "taom", "osh",
     "she'r", "hikoya", "latifa", "askiya", "ertak",
-    "ob-havo", "sport", "futbol", "chempionat", "o'yin natijasi",
+    # No bare "sport": "Sport rejimi" is a real Tesla drive mode.
+    "ob-havo", "futbol", "chempionat", "o'yin natijasi",
     "siyosat", "prezident", "saylov", "urush", "din",
     "aksiya", "birja", "investitsiya", "sarmoya", "kripto", "bitkoin",
     "shifokor", "kasallik", "dori", "tashxis", "davolash",
@@ -89,7 +90,7 @@ OFF_TOPIC = {
 UZBEK_STEMS = {
     "retsept", "ovqat", "pishir", "taom", "osh",
     "she'r", "hikoya", "latifa", "askiya", "ertak",
-    "ob-havo", "sport", "futbol", "chempionat",
+    "ob-havo", "futbol", "chempionat",
     "siyosat", "prezident", "saylov", "urush", "din",
     "aksiya", "birja", "investitsiya", "sarmoya", "kripto", "bitkoin",
     "shifokor", "kasallik", "dori", "tashxis", "davolash",
@@ -146,6 +147,23 @@ CHITCHAT = {
 
 _INJECTION_RE = [re.compile(p, re.IGNORECASE) for p in INJECTION]
 
+# Uzbek inflectional suffixes -- a closed set. Derivational morphemes ("xona",
+# "paz", "amik") are deliberately absent: an open "\w{0,12}" tail let "osh" match
+# "oshxona" (kitchen) and "din" match "dinamik", rejecting valid questions. Same
+# failure mode as "war" inside "warranty", one language over.
+#
+# Longest-first ordering matters: alternation is first-match, so "lar" ahead of
+# "larini" would truncate. "y" is excluded -- it is not an inflection, and it let
+# "din" reach "diniy".
+_UZBEK_SUFFIXES = [
+    "larini", "laring", "larim", "lardan", "larga", "larda", "lari", "lar",
+    "ingiz", "imiz", "ining", "ning", "ini", "iga", "ida", "idan",
+    "im", "ing", "si", "ga", "da", "dan", "ni", "niki", "i",
+]
+_SUFFIX_TAIL = "(?:{}){{0,3}}".format(
+    "|".join(sorted(map(re.escape, _UZBEK_SUFFIXES), key=len, reverse=True))
+)
+
 # Uzbek Latin uses several characters for the same apostrophe (o'zbek / o'zbek /
 # oʻzbek). Speech transcription picks whichever it likes, so fold them all to one
 # before matching.
@@ -165,16 +183,19 @@ def _compile_terms(terms: set[str], suffixes: bool = False) -> list[tuple[str, r
 
     Uzbek is agglutinative: "aksiya" shows up as "aksiyalarini", "to'lov" as
     "to'lovingiz". With suffixes=True, terms listed in UZBEK_STEMS also match their
-    inflected forms. This is deliberately NOT applied to English terms -- "war" plus a
-    suffix tail would swallow "warranty" and reject every warranty question.
+    inflected forms -- but only through _SUFFIX_TAIL, a closed set of real
+    inflections. An open "\\w{0,12}" tail here is NOT safe: it is anchored on the
+    left only, so "osh" swallowed "oshxona" and "sud" swallowed "sudralib".
+
+    None of this is applied to English terms -- "war" plus a suffix tail would
+    swallow "warranty" and reject every warranty question.
     """
     compiled = []
     for term in terms:
         body = re.escape(normalize(term))
         left = r"\b" if body[:1].isalnum() else ""
         if suffixes and term in UZBEK_STEMS and body[-1:].isalnum():
-            # Up to ~4 suffix syllables; still anchored, so no runaway substring hits.
-            right = r"\w{0,12}\b"
+            right = _SUFFIX_TAIL + r"\b"
         elif body[-1:].isalnum():
             right = r"\b"
         else:

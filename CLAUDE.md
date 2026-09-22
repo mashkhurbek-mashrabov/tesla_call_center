@@ -96,14 +96,22 @@ years.
 
 Two layers, and they are not redundant: the system instruction can be argued with, a
 code check cannot. `guard.py` runs on both the tool-call query and the caller's
-transcribed turn.
+transcribed turn, but only the tool-call path in `run_tool()` **enforces** — that is
+where a block actually stops the KB being searched. The transcript check in
+`gemini_to_browser()` is observability: by `turn_complete` the model has already
+spoken, so it logs and does not reject. It is how the word lists get tuned.
 
-Two Uzbek-specific traps in the matcher:
+Three Uzbek-specific traps in the matcher:
 
 - **Agglutination.** Uzbek stacks suffixes, so `aksiya` must also match
   `aksiyalarini`. Off-topic Uzbek stems listed in `UZBEK_STEMS` match with a suffix
   tail.
-- **That suffix tolerance must never be applied to English terms.** `war` plus a
+- **That tail must be a closed set of real inflections** (`_SUFFIX_TAIL`), never an
+  open `\w{0,N}`. An open tail is anchored on the left only, so `osh` (pilaf) ate
+  `oshxona` (kitchen), `din` ate `dinamik`, `dori` ate `dorixona`. Pinned by
+  `test_uzbek_stem_boundaries`. Do not add derivational morphemes (`xona`, `paz`,
+  `iv`) to that list — only case and possessive endings belong there.
+- **Suffix tolerance must never be applied to English terms.** `war` plus a
   suffix tail swallows `warranty` and rejects every warranty question. There is a
   regression test (`test_word_boundaries`) pinning exactly this — it caught the bug
   when suffix matching was first added set-wide.
@@ -112,6 +120,12 @@ Two Uzbek-specific traps in the matcher:
 
 Ambiguous input defaults to **allow**. A false refusal on a real customer is worse
 than a weak search, and the retrieval gate catches the rest.
+
+`OFF_TOPIC` is checked before `ON_TOPIC`, so a block-list hit beats every domain
+word in the same sentence. That ordering is deliberate ("write a python script about
+Tesla" is still a coding request), but it means each new block term must be checked
+against Tesla vocabulary first. `sport` was removed for exactly this: it rejected
+"Sport rejimi", a real drive mode. `futbol` and `chempionat` still cover sports.
 
 ## Conventions
 
