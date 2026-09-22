@@ -28,11 +28,24 @@ app = FastAPI(title="AI Call Center MVP")
 app.mount("/static", StaticFiles(directory=config.BASE_DIR / "static"), name="static")
 
 
-def live_config() -> types.LiveConnectConfig:
+def pick_voice(requested: str | None) -> str:
+    """Allow-list the voice. The name reaches Google, so an unknown string is dropped
+    rather than forwarded -- an invalid voice fails the whole session, not just audio."""
+    return requested if requested in config.VOICES else config.VOICE_NAME
+
+
+def live_config(voice: str) -> types.LiveConnectConfig:
     """No thinking_config and no enable_affective_dialog -- gemini-3.8-live rejects
     the first and the API removed the second."""
     return types.LiveConnectConfig(
         response_modalities=[types.Modality.AUDIO],
+        # Voice is fixed for the session: switching means reconnecting, which is why
+        # the UI picks it before the call rather than during.
+        speech_config=types.SpeechConfig(
+            voice_config=types.VoiceConfig(
+                prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice)
+            )
+        ),
         system_instruction=types.Content(
             parts=[types.Part(text=config.SYSTEM_INSTRUCTION)]
         ),
@@ -50,7 +63,12 @@ async def index() -> FileResponse:
 @app.get("/config")
 async def ui_config() -> dict:
     """What the UI needs to label itself, so the agent name lives in one place."""
-    return {"agent_name": config.AGENT_NAME, "company": config.COMPANY_NAME}
+    return {
+        "agent_name": config.AGENT_NAME,
+        "company": config.COMPANY_NAME,
+        "voices": list(config.VOICES),
+        "default_voice": config.VOICE_NAME,
+    }
 
 
 @app.get("/health")
@@ -205,12 +223,13 @@ async def call(ws: WebSocket) -> None:
         await ws.close()
         return
 
+    voice = pick_voice(ws.query_params.get("voice"))
     client = genai.Client(api_key=config.API_KEY)
-    log.info("call started (model=%s)", config.LIVE_MODEL)
+    log.info("call started (model=%s voice=%s)", config.LIVE_MODEL, voice)
 
     try:
         async with client.aio.live.connect(
-            model=config.LIVE_MODEL, config=live_config()
+            model=config.LIVE_MODEL, config=live_config(voice)
         ) as session:
             await ws.send_text(json.dumps({"type": "ready"}))
             # Nudge the model to speak first, the way a support agent answers a call.

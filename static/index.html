@@ -80,6 +80,21 @@
   button.active { background: var(--accent); border-color: var(--accent); }
   button:disabled { opacity: .5; cursor: not-allowed; }
 
+  .voice-pick {
+    display: flex; align-items: center; gap: .6rem;
+    color: var(--muted); font-size: .85rem;
+  }
+  select {
+    padding: .5rem 1rem;
+    color: var(--text);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: .85rem;
+    cursor: pointer;
+  }
+  select:disabled { opacity: .5; cursor: not-allowed; }
+
   footer {
     position: fixed; bottom: 1.25rem;
     color: #55555f; font-size: .72rem; text-align: center; padding: 0 1rem;
@@ -96,6 +111,10 @@
   <div id="orb" class="orb"></div>
   <p id="status">Tugmani bosing va gapiring</p>
   <button id="call-button">Qo'ng'iroq qilish</button>
+  <label class="voice-pick" for="voice-select">
+    Ovoz
+    <select id="voice-select"></select>
+  </label>
 
   <footer>
     Demo MVP. Not affiliated with Tesla, Inc. Knowledge base compiled from public

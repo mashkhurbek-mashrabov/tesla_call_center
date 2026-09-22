@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import test_guard  # noqa: E402
 import test_rag  # noqa: E402
+import test_voice  # noqa: E402
 
 
 def main() -> int:
@@ -23,6 +24,9 @@ def main() -> int:
 
     print("== guard (offline) ==")
     failed = test_guard.run()
+
+    print("\n== voice (offline) ==")
+    failed |= test_voice.run()
 
     print("\n== rag ==")
     failed |= test_rag.run(online=args.online)

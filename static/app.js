@@ -6,6 +6,7 @@ const OUT_RATE = 24000;  // Live API output format, fixed by the model
 const button = document.getElementById('call-button');
 const statusLine = document.getElementById('status');
 const orb = document.getElementById('orb');
+const voiceSelect = document.getElementById('voice-select');
 
 let agentName = 'Support';  // replaced from /config on load
 let ws = null;
@@ -71,8 +72,12 @@ async function startCall() {
               event.data === 'speaking' ? 'speaking' : 'listening');
   };
 
+  // Voice is fixed for the life of the session, so it rides the connect URL and the
+  // picker locks until the call ends.
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  ws = new WebSocket(`${proto}://${location.host}/ws/call`);
+  const query = voiceSelect.value ? `?voice=${encodeURIComponent(voiceSelect.value)}` : '';
+  voiceSelect.disabled = true;
+  ws = new WebSocket(`${proto}://${location.host}/ws/call${query}`);
   ws.binaryType = 'arraybuffer';
 
   ws.onopen = () => {
@@ -129,13 +134,21 @@ function endCall() {
   button.textContent = 'Qo\'ng\'iroq qilish';
   button.classList.remove('active');
   button.disabled = false;
+  voiceSelect.disabled = false;
   setStatus('Qo\'ng\'iroq tugadi', '');
 }
 
 button.addEventListener('click', () => (active ? endCall() : startCall()));
 
-// Agent name lives in config.py; the UI asks for it rather than duplicating it.
+// Agent name and voice list live in config.py; the UI asks for them rather than
+// duplicating them.
 fetch('/config')
   .then((r) => r.json())
-  .then((cfg) => { if (cfg.agent_name) agentName = cfg.agent_name; })
+  .then((cfg) => {
+    if (cfg.agent_name) agentName = cfg.agent_name;
+    for (const name of cfg.voices || []) {
+      const option = new Option(name, name, false, name === cfg.default_voice);
+      voiceSelect.add(option);
+    }
+  })
   .catch(() => {});
